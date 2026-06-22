@@ -1,7 +1,11 @@
-name: KauFeedback CI-CD
+name: CI-CD
 
 on:
 push:
+branches:
+- main
+
+pull_request:
 branches:
 - main
 
@@ -58,35 +62,4 @@ steps:
 
   - name: Build Frontend
     run: npm run build
-```
-
-deploy:
-
-```
-needs:
-  - backend-build
-  - frontend-build
-
-runs-on: ubuntu-latest
-
-steps:
-
-  - name: Deploy To EC2
-    uses: appleboy/ssh-action@v1.0.3
-    with:
-      host: ${{ secrets.EC2_HOST }}
-      username: ${{ secrets.EC2_USER }}
-      key: ${{ secrets.EC2_SSH_KEY }}
-      script: |
-        cd /home/ubuntu/kaufeedback
-
-        git fetch origin
-
-        git reset --hard origin/main
-
-        docker compose down || true
-
-        docker compose up -d --build
-
-        docker ps
 ```
