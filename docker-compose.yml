@@ -1,19 +1,17 @@
 version: "3.9"
-
 services:
+  backend:
+    build:
+      context: ./backend
+    container_name: kaufeedback-backend
+    ports:
+      - "8080:8080"
 
-backend:
-build:
-context: ./backend
-container_name: kaufeedback-backend
-ports:
-- "8080:8080"
-
-frontend:
-build:
-context: ./frontend
-container_name: kaufeedback-frontend
-ports:
-- "80:80"
-depends_on:
-- backend
+  frontend:
+    build:
+      context: ./frontend
+    container_name: kaufeedback-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
