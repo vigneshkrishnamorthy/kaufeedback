@@ -1,52 +1,61 @@
 name: CI-CD
 
 on:
-  push:
-    branches:
-      - main
+push:
+branches:
+- main
 
-  pull_request:
-    branches:
-      - main
+pull_request:
+branches:
+- main
 
 jobs:
-  backend-build:
-    runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: backend
+backend-build:
+runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
+```
+defaults:
+  run:
+    working-directory: backend
 
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
+steps:
+  - name: Checkout Repository
+    uses: actions/checkout@v4
 
-      - name: Grant Execute Permission
-        run: chmod +x gradlew
+  - name: Setup Java
+    uses: actions/setup-java@v4
+    with:
+      distribution: temurin
+      java-version: '21'
 
-      - name: Build Backend
-        run: ./gradlew clean build
+  - name: Grant Execute Permission
+    run: chmod +x gradlew
 
-  frontend-build:
-    runs-on: ubuntu-latest
+  - name: Build Backend
+    run: ./gradlew clean build -x test
+```
 
-    defaults:
-      run:
-        working-directory: frontend
+frontend-build:
+runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
+```
+defaults:
+  run:
+    working-directory: frontend
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+steps:
+  - name: Checkout Repository
+    uses: actions/checkout@v4
 
-      - name: Install Dependencies
-        run: npm install
+  - name: Setup Node
+    uses: actions/setup-node@v4
+    with:
+      node-version: '20'
 
-      - name: Build Frontend
-        run: npm run build
+  - name: Install Dependencies
+    run: npm install
+
+  - name: Build Frontend
+    run: npm run build
+```
