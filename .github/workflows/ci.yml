@@ -1,85 +1,81 @@
 name: KauFeedback CI-CD
 
 on:
-push:
-branches:
-- main
+  push:
+    branches:
+      - main
 
 jobs:
-backend-build:
-runs-on: ubuntu-latest
+  backend-build:
+    runs-on: ubuntu-latest
 
-```
-defaults:
-  run:
-    working-directory: backend
+    defaults:
+      run:
+        working-directory: backend
 
-steps:
-  - name: Checkout Repository
-    uses: actions/checkout@v4
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-  - name: Setup Java
-    uses: actions/setup-java@v4
-    with:
-      distribution: temurin
-      java-version: '21'
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
 
-  - name: Grant Execute Permission
-    run: chmod +x gradlew
+      - name: Grant Execute Permission
+        run: chmod +x gradlew
 
-  - name: Build Backend
-    run: ./gradlew clean build -x test
-```
+      - name: Build Backend
+        run: ./gradlew clean build -x test
 
-frontend-build:
-runs-on: ubuntu-latest
+  frontend-build:
+    runs-on: ubuntu-latest
 
-```
-defaults:
-  run:
-    working-directory: frontend
+    defaults:
+      run:
+        working-directory: frontend
 
-steps:
-  - name: Checkout Repository
-    uses: actions/checkout@v4
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-  - name: Setup Node
-    uses: actions/setup-node@v4
-    with:
-      node-version: '20'
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-  - name: Install Dependencies
-    run: npm install
+      - name: Install Dependencies
+        run: npm install
 
-  - name: Build Frontend
-    run: npm run build
-```
+      - name: Build Frontend
+        run: npm run build
 
-deploy:
-needs:
-- backend-build
-- frontend-build
+  deploy:
+    needs:
+      - backend-build
+      - frontend-build
 
-```
-runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-steps:
-  - name: Deploy To EC2
-    uses: appleboy/ssh-action@v1.0.3
+    steps:
+      - name: Deploy To EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            git config --global --add safe.directory /home/ubuntu/kaufeedback
+            cd /home/ubuntu/kaufeedback
+            git fetch --all
+            git reset --hard origin/main
 
-    with:
-      host: ${{ secrets.EC2_HOST }}
-      username: ${{ secrets.EC2_USER }}
-      key: ${{ secrets.EC2_SSH_KEY }}
+            echo "LATEST COMMIT"
+            git log --oneline -1
 
-      script: |
-        git config --global --add safe.directory /home/ubuntu/kaufeedback
-        cd /home/ubuntu/kaufeedback
-        git fetch --all
-        git reset --hard origin/main
-        echo "LATEST COMMIT:"
-        git log --oneline -1
-        docker compose down || true
-        docker compose build --no-cache
-        docker compose up -d
-        docker ps
+            docker compose down || true
+            docker compose build --no-cache
+            docker compose up -d
+
+            docker ps
