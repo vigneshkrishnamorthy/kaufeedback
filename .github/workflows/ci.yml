@@ -6,7 +6,6 @@ branches:
 - main
 
 jobs:
-
 backend-build:
 runs-on: ubuntu-latest
 
@@ -75,32 +74,12 @@ steps:
 
       script: |
         git config --global --add safe.directory /home/ubuntu/kaufeedback
-
         cd /home/ubuntu/kaufeedback
-
-        echo "===== CURRENT DIRECTORY ====="
-        pwd
-
-        echo "===== FETCHING LATEST CODE ====="
         git fetch --all
-
         git reset --hard origin/main
-
-        echo "===== DEPLOYED COMMIT ====="
+        echo "LATEST COMMIT:"
         git log --oneline -1
-
-        echo "===== STOPPING CONTAINERS ====="
         docker compose down || true
-
-        echo "===== REBUILDING ====="
         docker compose build --no-cache
-
-        echo "===== STARTING CONTAINERS ====="
         docker compose up -d
-
-        echo "===== RUNNING CONTAINERS ====="
         docker ps
-
-        echo "===== FRONTEND IMAGE ====="
-        docker images | head
-```
