@@ -131,7 +131,7 @@ export default function AdminDashboard() {
             className="export-btn"
             onClick={() =>
               window.open(
-                "http://localhost:8080/api/admin/export"
+                "https://kaufeedback.exploremira.com/api/admin/export"
               )
             }
           >
