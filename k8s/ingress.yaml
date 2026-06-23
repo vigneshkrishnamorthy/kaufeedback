@@ -1,0 +1,40 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: kaufeedback-ingress
+
+spec:
+  ingressClassName: nginx
+
+  rules:
+
+  - host: kaufeedback.exploremira.com
+
+    http:
+
+      paths:
+
+      - path: /
+
+        pathType: Prefix
+
+        backend:
+
+          service:
+            name: kaufeedback-frontend-service
+
+            port:
+              number: 80
+
+      - path: /api
+
+        pathType: Prefix
+
+        backend:
+
+          service:
+            name: kaufeedback-backend-service
+
+            port:
+              number: 8080

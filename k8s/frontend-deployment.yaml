@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: kaufeedback-frontend
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: kaufeedback-frontend
+
+  template:
+    metadata:
+      labels:
+        app: kaufeedback-frontend
+
+    spec:
+      containers:
+      - name: frontend
+
+        image: vigneshkrishnamorthy/kaufeedback-frontend:latest
+
+        ports:
+        - containerPort: 80
