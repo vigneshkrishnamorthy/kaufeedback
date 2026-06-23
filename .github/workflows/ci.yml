@@ -61,21 +61,40 @@ jobs:
     steps:
       - name: Deploy To EC2
         uses: appleboy/ssh-action@v1.0.3
+
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+
           script: |
             git config --global --add safe.directory /home/ubuntu/kaufeedback
+
             cd /home/ubuntu/kaufeedback
-            git fetch --all
+
+            echo "===== FETCHING LATEST CODE ====="
+            git fetch origin
+
             git reset --hard origin/main
 
-            echo "LATEST COMMIT"
+            echo "===== CURRENT COMMIT ====="
             git log --oneline -1
 
+            echo "===== STOPPING CONTAINERS ====="
             docker compose down || true
+
+            echo "===== REMOVING OLD IMAGES ====="
+            docker rmi kaufeedback-frontend || true
+            docker rmi kaufeedback-backend || true
+
+            echo "===== DOCKER CLEANUP ====="
+            docker system prune -af
+
+            echo "===== REBUILDING ====="
             docker compose build --no-cache
+
+            echo "===== STARTING ====="
             docker compose up -d
 
+            echo "===== RUNNING CONTAINERS ====="
             docker ps
