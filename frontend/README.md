@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-KauFeedback is a QR-based patient feedback management system designed for hospitals. Patients can scan a department-specific QR code, submit feedback, and hospital management can monitor feedback through a real-time analytics dashboard.
+KauFeedback is a QR-based patient feedback management system designed for hospitals. Patients can scan department-specific QR codes, submit feedback, and hospital management can monitor feedback through a real-time analytics dashboard.
 
 The system is built using modern DevOps practices and deployed on AWS using Docker and GitHub Actions CI/CD.
 
@@ -58,7 +58,7 @@ The system is built using modern DevOps practices and deployed on AWS using Dock
 
 ### Database
 
-* PostgreSQL
+* PostgreSQL (AWS RDS)
 
 ### DevOps
 
@@ -70,39 +70,57 @@ The system is built using modern DevOps practices and deployed on AWS using Dock
 * AWS Route53
 * AWS Application Load Balancer
 * AWS Target Groups
+* Security Groups
 
 ---
 
 ## Architecture Diagram
 
-```text
-Patient
-   │
-   ▼
-QR Code
-   │
-   ▼
-Route53 Domain
-(kaufeedback.exploremira.com)
-   │
-   ▼
-Application Load Balancer
-   │
-   ├──────────────► Frontend Target Group
-   │                    Port 80
-   │
-   └──────────────► Backend Target Group
-                        Port 8080
-                             │
-                             ▼
-                    Spring Boot Backend
-                             │
-                             ▼
-                     PostgreSQL Database
-                             │
-                             ▼
-                     Admin Dashboard
-```
+![AWS Architecture](docs/architecture.png)
+
+### Architecture Overview
+
+The application follows a production-ready AWS architecture.
+
+Patient/User
+
+↓
+
+QR Code Scan
+
+↓
+
+Route53 DNS
+
+kaufeedback.exploremira.com
+
+↓
+
+Application Load Balancer (ALB)
+
+↓
+
+Path Based Routing
+
+* /* → Frontend Target Group
+* /api/* → Backend Target Group
+
+↓
+
+Amazon EC2 (Ubuntu)
+
+Docker Compose Environment
+
+* React Frontend Container (Nginx)
+* Spring Boot Backend Container
+
+↓
+
+Amazon RDS PostgreSQL
+
+↓
+
+Admin Dashboard Analytics
 
 ---
 
@@ -110,32 +128,37 @@ Application Load Balancer
 
 ### AWS Services Used
 
-* Route53
+* Amazon Route53
 * Application Load Balancer
 * Target Groups
-* EC2 Ubuntu Server
-* RDS PostgreSQL
+* Amazon EC2
+* Amazon RDS PostgreSQL
 * Security Groups
+* Docker
+* GitHub Actions
 
 ### Infrastructure Flow
 
-```text
 User
-  │
-  ▼
+
+↓
+
 Route53
-  │
-  ▼
+
+↓
+
 Application Load Balancer
-  │
-  ▼
+
+↓
+
 EC2 Instance
-  ├── React Frontend Container
-  └── Spring Boot Backend Container
-  │
-  ▼
+
+* Frontend Docker Container
+* Backend Docker Container
+
+↓
+
 Amazon RDS PostgreSQL
-```
 
 ---
 
@@ -143,39 +166,44 @@ Amazon RDS PostgreSQL
 
 ### GitHub Actions Workflow
 
-Pipeline Stages:
+Pipeline Stages
 
 1. Source Checkout
 2. Backend Build using Gradle
 3. Frontend Build using Node.js
-4. Docker Build
-5. Deploy to EC2 using SSH
+4. Docker Image Build
+5. Deploy to EC2 via SSH
 6. Docker Compose Deployment
-7. Application Restart
+7. Container Restart
+8. Live Application Update
 
 ### Workflow
 
-```text
 Developer
-    │
-    ▼
+
+↓
+
 GitHub Repository
-    │
-    ▼
+
+↓
+
 GitHub Actions
-    │
-    ▼
+
+↓
+
 Build & Test
-    │
-    ▼
-EC2 Deployment
-    │
-    ▼
+
+↓
+
+Deploy to EC2
+
+↓
+
 Docker Compose
-    │
-    ▼
+
+↓
+
 Live Application
-```
 
 ---
 
@@ -235,7 +263,7 @@ Stores hospital branch locations.
 
 ### services
 
-Stores available services.
+Stores hospital services.
 
 ### feedback_entries
 
@@ -245,43 +273,51 @@ Stores patient feedback records.
 
 ## QR Based Feedback Flow
 
-```text
 Patient
-   │
-   ▼
+
+↓
+
 Scan QR Code
-   │
-   ▼
+
+↓
+
 Department Auto Selected
+
+↓
+
 Location Auto Selected
-   │
-   ▼
+
+↓
+
+Fill Feedback Form
+
+↓
+
 Submit Feedback
-   │
-   ▼
+
+↓
+
 Stored in PostgreSQL
-   │
-   ▼
-Visible in Dashboard
-```
+
+↓
+
+Visible in Admin Dashboard
 
 ---
 
 ## Live URL
 
-Patient Feedback Portal
+### Patient Feedback Portal
 
 https://kaufeedback.exploremira.com
 
-Admin Dashboard
+### Admin Dashboard
 
 https://kaufeedback.exploremira.com/admin
 
 ---
 
 ## Repository
-
-GitHub Repository
 
 https://github.com/vigneshkrishnamorthy/kaufeedback
 
@@ -297,6 +333,8 @@ https://github.com/vigneshkrishnamorthy/kaufeedback
 * CloudWatch Logging
 * SSL Automation
 * Auto Scaling Groups
+* Blue-Green Deployment
+* AWS ECS Migration
 
 ---
 
