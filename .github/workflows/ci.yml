@@ -1,69 +1,106 @@
 name: KauFeedback CI-CD
 
 on:
-  push:
-    branches:
-      - main
+push:
+branches:
+- main
 
 jobs:
-  backend-build:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
+backend-build:
+runs-on: ubuntu-latest
 
-      - name: Grant Execute Permission
-        run: chmod +x gradlew
+```
+defaults:
+  run:
+    working-directory: backend
 
-      - name: Build Backend
-        run: ./gradlew clean build -x test
+steps:
+  - name: Checkout Repository
+    uses: actions/checkout@v4
 
-  frontend-build:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+  - name: Setup Java
+    uses: actions/setup-java@v4
+    with:
+      distribution: temurin
+      java-version: '21'
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+  - name: Grant Execute Permission
+    run: chmod +x gradlew
 
-      - name: Install Dependencies
-        run: npm install
+  - name: Build Backend
+    run: ./gradlew clean build -x test
+```
 
-      - name: Build Frontend
-        run: npm run build
+frontend-build:
+runs-on: ubuntu-latest
 
-  deploy:
-    needs:
-      - backend-build
-      - frontend-build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy To EC2
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            git config --global --add safe.directory /home/ubuntu/kaufeedback
-            cd /home/ubuntu/kaufeedback
-            git fetch origin
-            git reset --hard origin/main
-            docker compose down || true
-            docker compose up -d --build
-            docker ps
+```
+defaults:
+  run:
+    working-directory: frontend
+
+steps:
+  - name: Checkout Repository
+    uses: actions/checkout@v4
+
+  - name: Setup Node
+    uses: actions/setup-node@v4
+    with:
+      node-version: '20'
+
+  - name: Install Dependencies
+    run: npm install
+
+  - name: Build Frontend
+    run: npm run build
+```
+
+deploy:
+needs:
+- backend-build
+- frontend-build
+
+```
+runs-on: ubuntu-latest
+
+steps:
+  - name: Deploy To EC2
+    uses: appleboy/ssh-action@v1.0.3
+
+    with:
+      host: ${{ secrets.EC2_HOST }}
+      username: ${{ secrets.EC2_USER }}
+      key: ${{ secrets.EC2_SSH_KEY }}
+
+      script: |
+        git config --global --add safe.directory /home/ubuntu/kaufeedback
+
+        cd /home/ubuntu/kaufeedback
+
+        echo "===== CURRENT DIRECTORY ====="
+        pwd
+
+        echo "===== FETCHING LATEST CODE ====="
+        git fetch --all
+
+        git reset --hard origin/main
+
+        echo "===== DEPLOYED COMMIT ====="
+        git log --oneline -1
+
+        echo "===== STOPPING CONTAINERS ====="
+        docker compose down || true
+
+        echo "===== REBUILDING ====="
+        docker compose build --no-cache
+
+        echo "===== STARTING CONTAINERS ====="
+        docker compose up -d
+
+        echo "===== RUNNING CONTAINERS ====="
+        docker ps
+
+        echo "===== FRONTEND IMAGE ====="
+        docker images | head
+```
