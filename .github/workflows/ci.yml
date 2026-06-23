@@ -8,11 +8,9 @@ on:
 jobs:
   backend-build:
     runs-on: ubuntu-latest
-
     defaults:
       run:
         working-directory: backend
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -31,11 +29,9 @@ jobs:
 
   frontend-build:
     runs-on: ubuntu-latest
-
     defaults:
       run:
         working-directory: frontend
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -55,40 +51,34 @@ jobs:
     needs:
       - backend-build
       - frontend-build
-
     runs-on: ubuntu-latest
-
     steps:
       - name: Deploy To EC2
         uses: appleboy/ssh-action@v1.0.3
-
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-
           script: |
             git config --global --add safe.directory /home/ubuntu/kaufeedback
-
             cd /home/ubuntu/kaufeedback
 
             echo "===== FETCHING LATEST CODE ====="
-            git fetch origin
-
+            git fetch origin main
             git reset --hard origin/main
+            git pull origin main
 
             echo "===== CURRENT COMMIT ====="
             git log --oneline -1
 
             echo "===== STOPPING CONTAINERS ====="
-            docker compose down || true
+            docker compose down --remove-orphans || true
 
             echo "===== REMOVING OLD IMAGES ====="
-            docker rmi kaufeedback-frontend || true
-            docker rmi kaufeedback-backend || true
+            docker compose images -q | xargs -r docker rmi -f || true
 
             echo "===== DOCKER CLEANUP ====="
-            docker system prune -af
+            docker image prune -f
 
             echo "===== REBUILDING ====="
             docker compose build --no-cache
@@ -98,3 +88,6 @@ jobs:
 
             echo "===== RUNNING CONTAINERS ====="
             docker ps
+
+            echo "===== CONTAINER LOGS (last 20 lines) ====="
+            docker compose logs --tail=20
